@@ -31,7 +31,7 @@ def get_file(fname):
 
 setup(
     name='sas-yolov7-seg',
-    version='1.0.0',
+    version='1.0.3',
     description='SAS YOLOv7 Seg',
     long_description=get_file('README.md'),
     long_description_content_type='text/markdown',
@@ -40,6 +40,7 @@ setup(
     url='https://github.com/sassoftware/yolov7-seg/',
     license='GNU GENERAL PUBLIC LICENSE 3.0',
     packages=find_packages(),
+    include_package_data=True,
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
