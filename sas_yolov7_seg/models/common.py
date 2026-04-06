@@ -26,7 +26,6 @@ from sas_yolov7_seg.utils.dataloaders import exif_transpose, letterbox
 from sas_yolov7_seg.utils.general import (LOGGER, ROOT, Profile, check_requirements, check_suffix, check_version, colorstr,
                            increment_path, make_divisible, non_max_suppression, scale_coords, xywh2xyxy, xyxy2xywh,
                            yaml_load)
-from sas_yolov7_seg.utils.plots import Annotator, colors, save_one_box
 from sas_yolov7_seg.utils.torch_utils import copy_attr, smart_inference_mode
 
 
@@ -753,21 +752,21 @@ class Detections:
                 for c in pred[:, -1].unique():
                     n = (pred[:, -1] == c).sum()  # detections per class
                     s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
-                if show or save or render or crop:
-                    annotator = Annotator(im, example=str(self.names))
-                    for *box, conf, cls in reversed(pred):  # xyxy, confidence, class
-                        label = f'{self.names[int(cls)]} {conf:.2f}'
-                        if crop:
-                            file = save_dir / 'crops' / self.names[int(cls)] / self.files[i] if save else None
-                            crops.append({
-                                'box': box,
-                                'conf': conf,
-                                'cls': cls,
-                                'label': label,
-                                'im': save_one_box(box, im, file=file, save=save)})
-                        else:  # all others
-                            annotator.box_label(box, label if labels else '', color=colors(cls))
-                    im = annotator.im
+                # if show or save or render or crop:
+                #     annotator = Annotator(im, example=str(self.names))
+                #     for *box, conf, cls in reversed(pred):  # xyxy, confidence, class
+                #         label = f'{self.names[int(cls)]} {conf:.2f}'
+                #         if crop:
+                #             file = save_dir / 'crops' / self.names[int(cls)] / self.files[i] if save else None
+                #             crops.append({
+                #                 'box': box,
+                #                 'conf': conf,
+                #                 'cls': cls,
+                #                 'label': label,
+                #                 'im': save_one_box(box, im, file=file, save=save)})
+                #         else:  # all others
+                #             annotator.box_label(box, label if labels else '', color=colors(cls))
+                #     im = annotator.im
             else:
                 s += '(no detections)'
 

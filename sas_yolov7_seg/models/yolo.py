@@ -25,7 +25,6 @@ from sas_yolov7_seg.models.common import *
 from sas_yolov7_seg.models.experimental import *
 from sas_yolov7_seg.utils.autoanchor import check_anchor_order
 from sas_yolov7_seg.utils.general import LOGGER, check_version, check_yaml, make_divisible, print_args
-from sas_yolov7_seg.utils.plots import feature_visualization
 from sas_yolov7_seg.utils.torch_utils import (fuse_conv_and_bn, initialize_weights, model_info, profile, scale_img, select_device,
                                time_sync)
 
@@ -211,8 +210,8 @@ class BaseModel(nn.Module):
                 self._profile_one_layer(m, x, dt)
             x = m(x)  # run
             y.append(x if m.i in self.save else None)  # save output
-            if visualize:
-                feature_visualization(x, m.type, m.i, save_dir=visualize)
+            # if visualize:
+            #     feature_visualization(x, m.type, m.i, save_dir=visualize)
         return x
 
     def _profile_one_layer(self, m, x, dt):

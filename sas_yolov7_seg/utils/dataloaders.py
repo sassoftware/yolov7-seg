@@ -26,7 +26,6 @@ import torchvision
 import yaml
 from PIL import ExifTags, Image, ImageOps
 from torch.utils.data import DataLoader, Dataset, dataloader, distributed
-from tqdm import tqdm
 
 from sas_yolov7_seg.utils.augmentations import (Albumentations, augment_hsv, classify_albumentations, classify_transforms, copy_paste,
                                  letterbox, mixup, random_perspective)
@@ -470,7 +469,7 @@ class LoadImagesAndLabels(Dataset):
         nf, nm, ne, nc, n = cache.pop('results')  # found, missing, empty, corrupt, total
         if exists and LOCAL_RANK in {-1, 0}:
             d = f"Scanning '{cache_path}' images and labels... {nf} found, {nm} missing, {ne} empty, {nc} corrupt"
-            tqdm(None, desc=prefix + d, total=n, initial=n, bar_format=BAR_FORMAT)  # display cache results
+            print(prefix + d)
             if cache['msgs']:
                 LOGGER.info('\n'.join(cache['msgs']))  # display warnings
         assert nf > 0 or not augment, f'{prefix}No labels found in {cache_path}, can not start training. {HELP_URL}'
@@ -538,7 +537,7 @@ class LoadImagesAndLabels(Dataset):
             self.im_hw0, self.im_hw = [None] * n, [None] * n
             fcn = self.cache_images_to_disk if cache_images == 'disk' else self.load_image
             results = ThreadPool(NUM_THREADS).imap(fcn, range(n))
-            pbar = tqdm(enumerate(results), total=n, bar_format=BAR_FORMAT, disable=LOCAL_RANK > 0)
+            pbar = enumerate(results)
             for i, x in pbar:
                 if cache_images == 'disk':
                     gb += self.npy_files[i].stat().st_size
@@ -554,10 +553,8 @@ class LoadImagesAndLabels(Dataset):
         nm, nf, ne, nc, msgs = 0, 0, 0, 0, []  # number missing, found, empty, corrupt, messages
         desc = f"{prefix}Scanning '{path.parent / path.stem}' images and labels..."
         with Pool(NUM_THREADS) as pool:
-            pbar = tqdm(pool.imap(verify_image_label, zip(self.im_files, self.label_files, repeat(prefix))),
-                        desc=desc,
-                        total=len(self.im_files),
-                        bar_format=BAR_FORMAT)
+            print(desc)
+            pbar = pool.imap(verify_image_label, zip(self.im_files, self.label_files, repeat(prefix)))
             for im_file, lb, shape, segments, nm_f, nf_f, ne_f, nc_f, msg in pbar:
                 nm += nm_f
                 nf += nf_f
@@ -867,7 +864,7 @@ def flatten_recursive(path=DATASETS_DIR / 'coco128'):
     if os.path.exists(new_path):
         shutil.rmtree(new_path)  # delete output folder
     os.makedirs(new_path)  # make new output folder
-    for file in tqdm(glob.glob(f'{str(Path(path))}/**/*.*', recursive=True)):
+    for file in glob.glob(f'{str(Path(path))}/**/*.*', recursive=True):
         shutil.copyfile(file, new_path / Path(file).name)
 
 
@@ -877,7 +874,7 @@ def extract_boxes(path=DATASETS_DIR / 'coco128'):  # from utils.dataloaders impo
     shutil.rmtree(path / 'classification') if (path / 'classification').is_dir() else None  # remove existing
     files = list(path.rglob('*.*'))
     n = len(files)  # number of files
-    for im_file in tqdm(files, total=n):
+    for im_file in files:
         if im_file.suffix[1:] in IMG_FORMATS:
             # image
             im = cv2.imread(str(im_file))[..., ::-1]  # BGR to RGB
@@ -923,7 +920,7 @@ def autosplit(path=DATASETS_DIR / 'coco128/images', weights=(0.9, 0.1, 0.0), ann
     [(path.parent / x).unlink(missing_ok=True) for x in txt]  # remove existing
 
     print(f'Autosplitting images from {path}' + ', using *.txt labeled images only' * annotated_only)
-    for i, img in tqdm(zip(indices, files), total=n):
+    for i, img in zip(indices, files):
         if not annotated_only or Path(img2label_paths([str(img)])[0]).exists():  # check label
             with open(path.parent / txt[i], 'a') as f:
                 f.write(f'./{img.relative_to(path.parent).as_posix()}' + '\n')  # add image to txt file
@@ -1062,7 +1059,7 @@ class HUBDatasetStats():
             dataset = LoadImagesAndLabels(self.data[split])  # load dataset
             x = np.array([
                 np.bincount(label[:, 0].astype(int), minlength=self.data['nc'])
-                for label in tqdm(dataset.labels, total=dataset.n, desc='Statistics')])  # shape(128x80)
+                for label in dataset.labels])
             self.stats[split] = {
                 'instance_stats': {
                     'total': int(x.sum()),
@@ -1091,7 +1088,8 @@ class HUBDatasetStats():
                 continue
             dataset = LoadImagesAndLabels(self.data[split])  # load dataset
             desc = f'{split} images'
-            for _ in tqdm(ThreadPool(NUM_THREADS).imap(self._hub_ops, dataset.im_files), total=dataset.n, desc=desc):
+            print(desc)
+            for _ in ThreadPool(NUM_THREADS).imap(self._hub_ops, dataset.im_files):
                 pass
         print(f'Done. All images saved to {self.im_dir}')
         return self.im_dir
