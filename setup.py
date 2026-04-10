@@ -31,7 +31,7 @@ def get_file(fname):
 
 setup(
     name='sas-yolov7-seg',
-    version='1.0.4',
+    version='1.0.5',
     description='SAS YOLOv7 Seg',
     long_description=get_file('README.md'),
     long_description_content_type='text/markdown',
