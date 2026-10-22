@@ -28,7 +28,7 @@ from zipfile import ZipFile
 import cv2
 import numpy as np
 import pandas as pd
-import pkg_resources as pkg
+from packaging.version import parse as parse_version
 import torch
 import torchvision
 import yaml
@@ -333,7 +333,7 @@ def check_python(minimum='3.7.0'):
 
 def check_version(current='0.0.0', minimum='0.0.0', name='version ', pinned=False, hard=False, verbose=False):
     # Check version vs. required version
-    current, minimum = (pkg.parse_version(x) for x in (current, minimum))
+    current, minimum = (parse_version(x) for x in (current, minimum))
     result = (current == minimum) if pinned else (current >= minimum)  # bool
     s = f'{name}{minimum} required by YOLOv5, but {name}{current} is currently installed'  # string
     if hard:
@@ -341,43 +341,6 @@ def check_version(current='0.0.0', minimum='0.0.0', name='version ', pinned=Fals
     if verbose and not result:
         LOGGER.warning(s)
     return result
-
-
-@TryExcept()
-def check_requirements(requirements=ROOT / 'requirements.txt', exclude=(), install=True, cmds=()):
-    # Check installed dependencies meet YOLOv5 requirements (pass *.txt file or list of packages)
-    prefix = colorstr('red', 'bold', 'requirements:')
-    check_python()  # check python version
-    if isinstance(requirements, (str, Path)):  # requirements.txt file
-        file = Path(requirements)
-        assert file.exists(), f"{prefix} {file.resolve()} not found, check failed."
-        with file.open() as f:
-            requirements = [f'{x.name}{x.specifier}' for x in pkg.parse_requirements(f) if x.name not in exclude]
-    else:  # list or tuple of packages
-        requirements = [x for x in requirements if x not in exclude]
-
-    n = 0  # number of packages updates
-    for i, r in enumerate(requirements):
-        try:
-            pkg.require(r)
-        except Exception:  # DistributionNotFound or VersionConflict if requirements not met
-            s = f"{prefix} {r} not found and is required by YOLOv5"
-            if install and AUTOINSTALL:  # check environment variable
-                LOGGER.info(f"{s}, attempting auto-update...")
-                try:
-                    assert check_online(), f"'pip install {r}' skipped (offline)"
-                    LOGGER.info(check_output(f'pip install "{r}" {cmds[i] if cmds else ""}', shell=True).decode())
-                    n += 1
-                except Exception as e:
-                    LOGGER.warning(f'{prefix} {e}')
-            else:
-                LOGGER.info(f'{s}. Please install and rerun your command.')
-
-    if n:  # if packages updated
-        source = file.resolve() if 'file' in locals() else requirements
-        s = f"{prefix} {n} package{'s' * (n > 1)} updated per {source}\n" \
-            f"{prefix} ⚠️ {colorstr('bold', 'Restart runtime or rerun command for updates to take effect')}\n"
-        LOGGER.info(s)
 
 
 def check_img_size(imgsz, s=32, floor=0):

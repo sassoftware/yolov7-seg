@@ -23,7 +23,7 @@ from PIL import Image
 from torch.cuda import amp
 
 from sas_yolov7_seg.utils.dataloaders import exif_transpose, letterbox
-from sas_yolov7_seg.utils.general import (LOGGER, ROOT, Profile, check_requirements, check_suffix, check_version, colorstr,
+from sas_yolov7_seg.utils.general import (LOGGER, ROOT, Profile, check_suffix, check_version, colorstr,
                            increment_path, make_divisible, non_max_suppression, scale_coords, xywh2xyxy, xyxy2xywh,
                            yaml_load)
 from sas_yolov7_seg.utils.torch_utils import copy_attr, smart_inference_mode
@@ -418,12 +418,10 @@ class DetectMultiBackend(nn.Module):
                 stride, names = int(d['stride']), d['names']
         elif dnn:  # ONNX OpenCV DNN
             LOGGER.info(f'Loading {w} for ONNX OpenCV DNN inference...')
-            check_requirements(('opencv-python>=4.5.4',))
             net = cv2.dnn.readNetFromONNX(w)
         elif onnx:  # ONNX Runtime
             LOGGER.info(f'Loading {w} for ONNX Runtime inference...')
             cuda = torch.cuda.is_available() and device.type != 'cpu'
-            check_requirements(('onnx', 'onnxruntime-gpu' if cuda else 'onnxruntime'))
             import onnxruntime
             providers = ['CUDAExecutionProvider', 'CPUExecutionProvider'] if cuda else ['CPUExecutionProvider']
             session = onnxruntime.InferenceSession(w, providers=providers)
@@ -432,7 +430,6 @@ class DetectMultiBackend(nn.Module):
                 stride, names = int(meta['stride']), eval(meta['names'])
         elif xml:  # OpenVINO
             LOGGER.info(f'Loading {w} for OpenVINO inference...')
-            check_requirements(('openvino',))  # requires openvino-dev: https://pypi.org/project/openvino-dev/
             from openvino.runtime import Core, Layout, get_batch
             ie = Core()
             if not Path(w).is_file():  # if not *.xml
