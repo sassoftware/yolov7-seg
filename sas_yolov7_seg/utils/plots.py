@@ -18,7 +18,7 @@ import torch
 from PIL import Image, ImageDraw, ImageFont
 
 from sas_yolov7_seg.utils import TryExcept, threaded
-from sas_yolov7_seg.utils.general import (CONFIG_DIR, FONT, LOGGER, check_font, check_requirements, clip_coords, increment_path,
+from sas_yolov7_seg.utils.general import (CONFIG_DIR, FONT, LOGGER, check_font, clip_coords, increment_path,
                            is_ascii, xywh2xyxy, xyxy2xywh)
 from utils.metrics import fitness
 
